@@ -27,6 +27,14 @@ describe 'Games', () ->
       expect(err).to.be(null)
       done()
 
+  it '#setState() sets the ttl of a game object', (done) ->
+    games.setState game.id, game, (err) ->
+      expect(err).to.be(null)
+      games.redis.ttl games.key(game.id), (err, data) ->
+        expect(err).to.be(null)
+        expect(data).to.above 0
+        done()
+        
   it '#state() retrieves game\'s state from redis by game ID', (done) ->
     games.state game.id, (err, state) ->
       expect(err).to.be(null)

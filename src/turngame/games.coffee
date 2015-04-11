@@ -16,6 +16,8 @@ class Games
   # Save game state to redis
   _setState: (multi, id, state) ->
     multi.set(@key(id), JSON.stringify(state))
+      # expire game in 1 hour
+      .expire @key(id), 3600
 
   setState: (id, state, callback) ->
     @_setState(@multi(), id, state).exec (err, replies) ->
