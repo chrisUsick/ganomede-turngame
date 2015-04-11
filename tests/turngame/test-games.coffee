@@ -34,6 +34,10 @@ describe 'Games', () ->
         expect(err).to.be(null)
         expect(data).to.above 0
         done()
+      setTimeout ( ->
+        games.redis.get games.key(game.id), (err, data) ->
+          expect(data).to.not.be.ok()
+        ), 1001
         
   it '#state() retrieves game\'s state from redis by game ID', (done) ->
     games.state game.id, (err, state) ->

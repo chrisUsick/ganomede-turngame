@@ -3,9 +3,10 @@ log = require '../log'
 PREFIX_SEPARATOR = ':'
 
 class Games
-  constructor: (redis, prefix) ->
+  constructor: (redis, prefix, TTL) ->
     @redis = redis
     @prefix = prefix
+    @TTL = if TTL then TTL else 1
 
   multi: () ->
     @redis.multi()
@@ -17,7 +18,7 @@ class Games
   _setState: (multi, id, state) ->
     multi.set(@key(id), JSON.stringify(state))
       # expire game in 1 hour
-      .expire @key(id), 3600
+      .expire @key(id), @TTL
 
   setState: (id, state, callback) ->
     @_setState(@multi(), id, state).exec (err, replies) ->

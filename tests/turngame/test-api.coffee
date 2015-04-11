@@ -100,6 +100,18 @@ describe "turngame-api", ->
             expect(res.body).to.eql(samples.newgameOutcome)
             done()
 
+      it 'sets game ttl', (done) ->
+        go()
+          .post endpoint("/auth/#{users.alice.token}/games/#{newgame.id}")
+          .send newgame
+          .expect 200
+          .end (err, res) ->
+            expect(res.body).to.eql(samples.newgameOutcome)
+            games.redis.ttl games.key(newgame.id), (err, data) ->
+              expect(err).to.be(null)
+              expect(data).to.be.above 0
+              done()
+
     describe 'GET /auth/:token/games/:id/moves', () ->
       it 'retrieves moves made in a game', (done) ->
         go()
@@ -139,6 +151,7 @@ describe "turngame-api", ->
             expect(res.body.message).to.be('WaitForYourTurn')
             done()
 
+
       # This will post a successful move as Bob and finish the game
       it 'adds move to a game and returns new game state', (done) ->
         go()
@@ -149,6 +162,8 @@ describe "turngame-api", ->
             expect(err).to.be(null)
             expect(res.body).to.eql(samples.gameNew)
             done()
+
+      
 
       # This is ran after game is finished.
       it 'replies with http 423 when trying to make a move in a finished game',
@@ -184,4 +199,31 @@ describe "turngame-api", ->
           .post endpoint("/auth/#{users.jdoe.token}/games/bad-#{game.id}/moves")
           .expect 404, done
 
+    # describe 'TTL for POST /auth/:token/games/:id/moves', () ->
+    #   game2 = Object.create game
+    #   game2.id += '1'
+    #   # This will try to make a move as Alice when it is Bob's turn
+    #   it 'checks that move is performed in compliance with gameState.turn',
+    #   (done) ->
+    #     go()
+    #       .post endpoint("/auth/#{users.alice.token}/games/#{game2.id}/moves")
+    #       .send {moveData: samples.nextMove.move}
+    #       .expect 400
+    #       .end (err, res) ->
+    #         expect(err).to.be(null)
+    #         expect(res.body.message).to.be('WaitForYourTurn')
+    #         done()
+
+    #   it 'updates the ttl of the game', (done) ->
+    #     go()
+    #       .post endpoint("/auth/#{users.bob.token}/games/#{game2.id}/moves")
+    #       .send {moveData: samples.nextMove.move}
+    #       .expect 200
+    #       .end (err, res) ->
+    #         expect(err).to.be(null)
+    #         # expect(res.body).to.eql(samples.gameNew)
+    #         games.redis.ttl games.key(game2.id), (err, data) ->
+    #           expect(err).to.be(null)
+    #           expect(data).to.be.above 0
+    #           done()
 # vim: ts=2:sw=2:et:
